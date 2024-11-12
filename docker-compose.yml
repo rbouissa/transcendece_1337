@@ -1,9 +1,24 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:latest  # or mysql, mongo, etc.
+    container_name: database
+    environment:
+      POSTGRES_DB: "tr_db"
+      POSTGRES_USER: "reda_user"
+      POSTGRES_PASSWORD: "123"
+    ports:
+      - "5432:5432"
   backend:
     build: ./backend  # Path to your Django backend Dockerfile
     container_name: backend
+    environment:
+      POSTGRES_DB: "tr_db"
+      POSTGRES_USER: "reda_user"
+      POSTGRES_PASSWORD: "123"
+    depends_on:
+      - db
     ports:
       - "8000:8000"  # Maps port 8000 on the host to the backend
     networks:
