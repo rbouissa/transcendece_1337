@@ -1,5 +1,5 @@
-Django>=5.0,<6.0
+Django==5.0
 djangorestframework
 django-cors-headers
-
+psycopg2-binary==2.9.9
 # Add other dependencies as needed

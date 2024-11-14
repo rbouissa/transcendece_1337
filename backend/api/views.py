@@ -5,6 +5,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
+    
+from django.contrib.auth.models import User
+from rest_framework.response import Response
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.permissions import AllowAny
+from django.contrib.auth import authenticate
 class SampleAPI(APIView):
     def get(self, request):
         data = {'message': 'Hello from Django backend'}
@@ -12,13 +18,6 @@ class SampleAPI(APIView):
     def post(self,request):
         data = {'message': 'Hello from Django backend'}
         return Response(data, status=status.HTTP_200_OK)
-    
-from django.contrib.auth.models import User
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.permissions import AllowAny
 
 class Signup(APIView):
     permission_classes = [AllowAny]  # To allow any user to access this view
@@ -42,11 +41,6 @@ class Signup(APIView):
     def get(self, request):
         return Response({'message': 'This is the signup page'}, status=status.HTTP_200_OK)
 
-
-from django.contrib.auth import authenticate
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 
 class Login(APIView):
     def post(self, request):

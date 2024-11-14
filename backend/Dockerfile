@@ -1,6 +1,18 @@
 # Backend Dockerfile in ./backend
 FROM python:3.10
+
+# Set working directory inside the container
 WORKDIR /app
-COPY . .
-RUN pip install -r requirements.txt
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+# Copy all files into the container
+COPY . /app/
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the shell script to /bin and make it executable
+COPY script.sh /bin/script.sh
+RUN chmod +x /bin/script.sh
+
+# Run script.sh (assuming script.sh starts Django or waits for the database)
+ENTRYPOINT ["script.sh"]
