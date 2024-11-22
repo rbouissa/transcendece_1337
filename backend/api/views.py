@@ -90,3 +90,52 @@ class loginwith42(APIView):
 
         # Step 5: Return the URL as a JSON response
         return JsonResponse({"url": auth_url})
+import requests
+from django.http import JsonResponse, HttpResponseRedirect
+from django.conf import settings
+from rest_framework.views import APIView
+
+class Intra42Callback(APIView):
+    """
+    Handles the callback from Intra42, exchanges the code for tokens,
+    and retrieves user info.
+    """
+    def get(self, request):
+        code = request.GET.get('code')
+        state = request.GET.get('state')
+
+        # Verify state
+        #if state != request.session.get('oauth_state'):
+        #    return JsonResponse({"error": "Invalid state"}, status=400)
+
+        try:
+            # Exchange the code for tokens
+            token_url = "https://api.intra.42.fr/oauth/token"
+            token_data = {
+                "grant_type": "authorization_code",
+                "client_id": settings.OAUTH_42_CLIENT_ID,
+                "client_secret": settings.OAUTH_42_CLIENT_SECRET,
+                "code": code,
+                "redirect_uri": settings.OAUTH_42_REDIRECT_URI,
+            }
+            token_response = requests.post(token_url, data=token_data)
+            token_response.raise_for_status()  # Raise exception for invalid responses
+            tokens = token_response.json()
+
+            # Fetch user info using access token
+            user_info_url = "https://api.intra.42.fr/v2/me"
+            user_info_headers = {
+                "Authorization": f"Bearer {tokens['access_token']}"
+            }
+            user_info_response = requests.get(user_info_url, headers=user_info_headers)
+            user_info_response.raise_for_status()
+            intra42_user = user_info_response.json()
+
+            # Optionally, set the user's name in a cookie and redirect
+            response = HttpResponseRedirect("http://localhost")
+            response.set_cookie("username", intra42_user.get("login"))
+
+            return response
+
+        except requests.RequestException as err:
+            return JsonResponse({"error": str(err)}, status=500)
