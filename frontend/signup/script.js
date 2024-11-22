@@ -68,3 +68,30 @@ document.getElementById('signupForm').addEventListener('submit', async function(
         document.getElementById('responseMessage').textContent = "Network error or server is down";
     }
 });
+
+// JavaScript for handling the login button
+document.getElementById('intra42-login-btn').addEventListener('click', async () => {
+    try {
+        // Fetch the Intra42 authentication URL from the backend
+        const response = await fetch('http://localhost:8000/api/login_with_42/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (response.ok) {
+            // Extract the URL and redirect the user
+            const data = await response.json();
+            if (data.url) {
+                window.location.href = data.url; // Redirect to Intra42 authentication page
+            } else {
+                console.error('URL not found in response');
+            }
+        } else {
+            console.error('Failed to fetch authentication URL');
+        }
+    } catch (error) {
+        console.error('Error during login:', error);
+    }
+});

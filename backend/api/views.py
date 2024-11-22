@@ -57,3 +57,36 @@ class Login(APIView):
         else:
             # Authentication failed, respond with an error
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+from django.conf import settings
+from django.http import JsonResponse
+from rest_framework.views import APIView
+import uuid
+from django.http import HttpResponseRedirect
+
+class loginwith42(APIView):
+    """
+    Generates the Intra42 OAuth URL and sends it to the frontend.
+    """
+    def get(self, request):
+        # Step 1: Retrieve Client ID from settings
+        client_id = settings.OAUTH_42_CLIENT_ID
+
+        # Step 2: Define the Redirect URI
+        redirect_uri = settings.OAUTH_42_REDIRECT_URI
+
+        # Step 3: Generate a random state string
+        state = str(uuid.uuid4())  # Unique identifier for CSRF protection
+        request.session['oauth_state'] = state  # Save state in the session for later validation
+
+        # Step 4: Construct the Intra42 Authorization URL
+        auth_url = (
+            f"https://api.intra.42.fr/oauth/authorize?"
+            f"client_id={client_id}"
+            f"&redirect_uri={redirect_uri}"
+            f"&response_type=code"
+            f"&scope=public"
+            f"&state={state}"
+        )
+
+        # Step 5: Return the URL as a JSON response
+        return JsonResponse({"url": auth_url})
