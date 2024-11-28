@@ -95,18 +95,89 @@ from django.http import JsonResponse, HttpResponseRedirect
 from django.conf import settings
 from rest_framework.views import APIView
 
+
+
+def fetch_intra42_user_info(access_token):
+    url = "https://api.intra.42.fr/v2/me"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return response.json()  # User profile data
+    else:
+        print(f"Error: {response.status_code}, {response.text}")
+        return None
+
+
+import requests
+from django.conf import settings
+from django.http import JsonResponse
+from rest_framework.views import APIView
+from .models import Intra42User
+
+# import logging
+
+# # Set up logging (optional but recommended for production)
+# logger = logging.getLogger(__name__)
+
+# class Intra42Callback(APIView):
+#     def get(self, request):
+#         code = request.GET.get('code')
+#         state = request.GET.get('state')
+
+#         try:
+#             # Exchange the code for tokens
+#             token_url = "https://api.intra.42.fr/oauth/token"
+#             token_data = {
+#                 "grant_type": "authorization_code",
+#                 "client_id": settings.OAUTH_42_CLIENT_ID,
+#                 "client_secret": settings.OAUTH_42_CLIENT_SECRET,
+#                 "code": code,
+#                 "redirect_uri": settings.OAUTH_42_REDIRECT_URI,
+#             }
+#             token_response = requests.post(token_url, data=token_data)
+#             token_response.raise_for_status()
+#             tokens = token_response.json()
+
+#             # Fetch user info using access token
+#             access_token = tokens['access_token']
+#             user_info_url = "https://api.intra.42.fr/v2/me"
+#             user_info_headers = {
+#                 "Authorization": f"Bearer {access_token}",
+#             }
+#             user_info_response = requests.get(user_info_url, headers=user_info_headers)
+#             user_info_response.raise_for_status()
+#             user_data = user_info_response.json()
+# #id,email,login,last_name,usual_full_name,url,phone,displayname:reda bouissali
+# #kind:student,image:{'link': 'https://cdn.intra.42.fr/users/a3eeff3cb3803a74a575bce46cb21021/rbouissa.JPG', 'versions': {'large': 'https://cdn.intra.42.fr/users/36321d78d5c54ac008580c633a958b92/large_rbouissa.JPG', 'medium': 'https://cdn.intra.42.fr/users/2d908253b509b03c0e33b1c3050e226e/medium_rbouissa.JPG', 'small': 'https://cdn.intra.42.fr/users/54c3150e5b52ef6bf9212d37fdc87313/small_rbouissa.JPG',
+# #pool_month,pool_year,Wallet: 145,created_at,updated_at,correction_point
+#             # Print user data to console
+#             print("Fetched User Data:", user_data)
+
+#             # Alternatively, log the data
+#             logger.info("Fetched User Data: %s", user_data)
+
+#             # Save or update user data in the database
+#             user, created = Intra42User.objects.update_or_create(
+#                 intra_id=user_data['id'],
+#                 defaults={
+#                     "login": user_data['login'],
+#                     "email": user_data['email'],
+#                 },
+#             )
+
+#             return JsonResponse({"message": "Data fetched and printed successfully"})
+
+#         except requests.RequestException as err:
+#             logger.error("Error fetching data: %s", err)
+#             return JsonResponse({"error": str(err)}, status=500)
+
+
+
 class Intra42Callback(APIView):
-    """
-    Handles the callback from Intra42, exchanges the code for tokens,
-    and retrieves user info.
-    """
     def get(self, request):
         code = request.GET.get('code')
-        state = request.GET.get('state')
-
-        # Verify state
-        #if state != request.session.get('oauth_state'):
-        #    return JsonResponse({"error": "Invalid state"}, status=400)
 
         try:
             # Exchange the code for tokens
@@ -119,23 +190,43 @@ class Intra42Callback(APIView):
                 "redirect_uri": settings.OAUTH_42_REDIRECT_URI,
             }
             token_response = requests.post(token_url, data=token_data)
-            token_response.raise_for_status()  # Raise exception for invalid responses
+            token_response.raise_for_status()
             tokens = token_response.json()
 
             # Fetch user info using access token
+            access_token = tokens['access_token']
             user_info_url = "https://api.intra.42.fr/v2/me"
             user_info_headers = {
-                "Authorization": f"Bearer {tokens['access_token']}"
+                "Authorization": f"Bearer {access_token}",
             }
             user_info_response = requests.get(user_info_url, headers=user_info_headers)
             user_info_response.raise_for_status()
-            intra42_user = user_info_response.json()
+            user_data = user_info_response.json()
 
-            # Optionally, set the user's name in a cookie and redirect
-            response = HttpResponseRedirect("http://localhost")
-            response.set_cookie("username", intra42_user.get("login"))
+            # Save or update user data in the database
+            user, created = Intra42User.objects.update_or_create(
+                intra_id=user_data['id'],  # Unique Intra42 ID
+                defaults={
+                    "login": user_data['login'],
+                    "email": user_data['email'],
+                    "first_name": user_data['first_name'],
+                    "last_name": user_data['last_name'],
+                    
+                    # #"first_name": user_data.get('first_name', ''),
+                    # "last_name": user_data.get('last_name', ''),
+                    "image":  user_data['image'],
+                    #"kind": user_data['kind'],
+                    
+                    #"access_token": access_token,
+                    #"refresh_token": tokens.get('refresh_token', ''),
+                    
+                },
+            )
 
-            return response
+            # Debug: Print success
+            print("User saved:", user)
+
+            return JsonResponse({"message": "User data saved successfully"})
 
         except requests.RequestException as err:
             return JsonResponse({"error": str(err)}, status=500)
