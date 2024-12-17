@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'api',
+    # 'django.contrib.sites',
+    # 'social_django',
+    # 'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -126,7 +129,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-
+SITE_ID = 1
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
@@ -142,3 +145,32 @@ OAUTH_42_REDIRECT_URI = 'http://localhost:8000/api/intra42callback/'
 OAUTH_42_AUTHORIZATION_URL = 'https://api.intra.42.fr/oauth/authorize'
 OAUTH_42_TOKEN_URL = 'https://api.intra.42.fr/oauth/token'
 OAUTH_42_API_BASE_URL = 'https://api.intra.42.fr/v2'
+
+
+# settings.py
+# from datetime import timedelta # import this library top of the settings.py file
+
+# put on your settings.py file below INSTALLED_APPS
+# REST_FRAMEWORK = {
+#     'DEFAULT_PERMISSION_CLASSES': (
+#         'rest_framework.permissions.IsAuthenticated',
+#     ),
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     ),
+# }
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+# AUTHENTICATION_BACKENDS = (
+#     'social_core.backends.github.GithubOAuth2',  # Intra42 uses the GitHub OAuth2 backend
+#     'django.contrib.auth.backends.ModelBackend',  # Default backend for handling standard Django login
+# )
+
+
+JWT_SECRET_KEY = 'api'  # A unique and secure key for signing tokens
+JWT_ALGORITHM = 'HS256'  # Algorithm used for signing (HS256 is widely used)
+JWT_EXPIRATION_SECONDS = 3600  # Token validity in seconds (1 hour here)

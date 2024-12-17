@@ -1,16 +1,72 @@
 from django.shortcuts import render
-
-# Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
-    
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
+from rest_framework.exceptions import AuthenticationFailed
+# from utils.jwt_helper import decode_jwt
+# utils/jwt_helper.py
+import jwt
+import datetime
+from django.conf import settings
+
+
+#for jwt
+
+def generate_jwt(payload):
+    """
+    Generates a JWT token with the given payload.
+    """
+    payload['exp'] = datetime.datetime.utcnow() + datetime.timedelta(seconds=settings.JWT_EXPIRATION_SECONDS)
+    payload['iat'] = datetime.datetime.utcnow()
+    payload['iss'] = 'your-app-name'
+    token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    return token
+
+def decode_jwt(token):
+    """
+    Decodes a JWT token and returns the payload if valid.
+    """
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return {'error': 'Token has expired'}
+    except jwt.InvalidTokenError:
+        return {'error': 'Invalid token'}
+
+#this like csrf it is adecorator for using jwt to protect such endpoint
+def jwt_required(view_func):
+    """
+    A decorator to validate JWT for protected endpoints.
+    """
+    def wrapper(request, *args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            raise AuthenticationFailed('Authorization token not provided or invalid.')
+
+        token = auth_header.split(' ')[1]
+        decoded_payload = decode_jwt(token)
+
+        if 'error' in decoded_payload:
+            raise AuthenticationFailed(decoded_payload['error'])
+
+        # Attach user info to the request
+        request.user_payload = decoded_payload
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+#end of jwt utils
+
+
+
+
+
 class SampleAPI(APIView):
     def get(self, request):
         data = {'message': 'Hello from Django backend'}
@@ -52,6 +108,13 @@ class Login(APIView):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
+             # Generate JWT token
+            payload = {
+                'user_id': user.id,
+                'username': user.username,
+                'email': user.email,
+            }
+            token = generate_jwt(payload)
             # User is authenticated, respond with success
             return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
         else:
@@ -62,6 +125,36 @@ from django.http import JsonResponse
 from rest_framework.views import APIView
 import uuid
 from django.http import HttpResponseRedirect
+
+
+# from django.shortcuts import redirect
+# from django.contrib.auth import login
+# from django.http import JsonResponse
+# from social_django.models import UserSocialAuth
+# from social_django.utils import psa
+# from django.contrib.auth.models import User
+
+# from django.shortcuts import redirect
+# from django.contrib.auth import login
+# from django.http import JsonResponse
+# from social_django.utils import psa
+# from rest_framework.views import APIView
+
+# This view will handle the Intra42 OAuth2 callback after successful sign up/sign in
+# @psa('social:complete')
+# class Intra42Login(APIView):
+#     def post(self, request, backend):
+#         # Get the user info from the social authentication backend (Intra42 in this case)
+#         user = request.user
+
+#         # Check if the user is authenticated
+#         if user.is_authenticated:
+#             login(request, user)  # Log the user in
+#             return redirect('/')  # Redirect to the homepage or dashboard after successful login
+#         else:
+#             return JsonResponse({'error': 'Authentication failed'}, status=400)
+
+
 
 class loginwith42(APIView):
     """
@@ -115,64 +208,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from rest_framework.views import APIView
 from .models import Intra42User
-
-# import logging
-
-# # Set up logging (optional but recommended for production)
-# logger = logging.getLogger(__name__)
-
-# class Intra42Callback(APIView):
-#     def get(self, request):
-#         code = request.GET.get('code')
-#         state = request.GET.get('state')
-
-#         try:
-#             # Exchange the code for tokens
-#             token_url = "https://api.intra.42.fr/oauth/token"
-#             token_data = {
-#                 "grant_type": "authorization_code",
-#                 "client_id": settings.OAUTH_42_CLIENT_ID,
-#                 "client_secret": settings.OAUTH_42_CLIENT_SECRET,
-#                 "code": code,
-#                 "redirect_uri": settings.OAUTH_42_REDIRECT_URI,
-#             }
-#             token_response = requests.post(token_url, data=token_data)
-#             token_response.raise_for_status()
-#             tokens = token_response.json()
-
-#             # Fetch user info using access token
-#             access_token = tokens['access_token']
-#             user_info_url = "https://api.intra.42.fr/v2/me"
-#             user_info_headers = {
-#                 "Authorization": f"Bearer {access_token}",
-#             }
-#             user_info_response = requests.get(user_info_url, headers=user_info_headers)
-#             user_info_response.raise_for_status()
-#             user_data = user_info_response.json()
-# #id,email,login,last_name,usual_full_name,url,phone,displayname:reda bouissali
-# #kind:student,image:{'link': 'https://cdn.intra.42.fr/users/a3eeff3cb3803a74a575bce46cb21021/rbouissa.JPG', 'versions': {'large': 'https://cdn.intra.42.fr/users/36321d78d5c54ac008580c633a958b92/large_rbouissa.JPG', 'medium': 'https://cdn.intra.42.fr/users/2d908253b509b03c0e33b1c3050e226e/medium_rbouissa.JPG', 'small': 'https://cdn.intra.42.fr/users/54c3150e5b52ef6bf9212d37fdc87313/small_rbouissa.JPG',
-# #pool_month,pool_year,Wallet: 145,created_at,updated_at,correction_point
-#             # Print user data to console
-#             print("Fetched User Data:", user_data)
-
-#             # Alternatively, log the data
-#             logger.info("Fetched User Data: %s", user_data)
-
-#             # Save or update user data in the database
-#             user, created = Intra42User.objects.update_or_create(
-#                 intra_id=user_data['id'],
-#                 defaults={
-#                     "login": user_data['login'],
-#                     "email": user_data['email'],
-#                 },
-#             )
-
-#             return JsonResponse({"message": "Data fetched and printed successfully"})
-
-#         except requests.RequestException as err:
-#             logger.error("Error fetching data: %s", err)
-#             return JsonResponse({"error": str(err)}, status=500)
-
+from django.shortcuts import render
 
 
 class Intra42Callback(APIView):
@@ -222,11 +258,21 @@ class Intra42Callback(APIView):
                     
                 },
             )
+            if created:
+                #user.set_unusable_password()  # User signed up via OAuth, so no password
+                user.save()
 
+            # Generate JWT token
+            payload = {
+                'user_id': user.intra_id,
+                'username': user.login,
+                'email': user.email,
+            }
+            token = generate_jwt(payload)
             # Debug: Print success
             print("User saved:", user)
 
-            return JsonResponse({"message": "User data saved successfully"})
+            return HttpResponseRedirect ("http://localhost:80")
 
         except requests.RequestException as err:
             return JsonResponse({"error": str(err)}, status=500)
