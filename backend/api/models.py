@@ -1,6 +1,9 @@
 from django.db import models
+from django.contrib.auth.models import User
+
 
 class Intra42User(models.Model):
+    #user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="intra42_profile")
     intra_id = models.IntegerField(unique=True)  # Unique ID from Intra42
     login = models.CharField(max_length=1000, unique=True)  # User's login name
     email = models.EmailField(unique=True)  # User's email

@@ -8,66 +8,14 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from rest_framework.exceptions import AuthenticationFailed
-# from utils.jwt_helper import decode_jwt
-# utils/jwt_helper.py
 import jwt
 import datetime
 from django.conf import settings
 
 
-#for jwt
-
-def generate_jwt(payload):
-    """
-    Generates a JWT token with the given payload.
-    """
-    payload['exp'] = datetime.datetime.utcnow() + datetime.timedelta(seconds=settings.JWT_EXPIRATION_SECONDS)
-    payload['iat'] = datetime.datetime.utcnow()
-    payload['iss'] = 'your-app-name'
-    token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
-    return token
-
-def decode_jwt(token):
-    """
-    Decodes a JWT token and returns the payload if valid.
-    """
-    try:
-        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        return payload
-    except jwt.ExpiredSignatureError:
-        return {'error': 'Token has expired'}
-    except jwt.InvalidTokenError:
-        return {'error': 'Invalid token'}
-
-#this like csrf it is adecorator for using jwt to protect such endpoint
-def jwt_required(view_func):
-    """
-    A decorator to validate JWT for protected endpoints.
-    """
-    def wrapper(request, *args, **kwargs):
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            raise AuthenticationFailed('Authorization token not provided or invalid.')
-
-        token = auth_header.split(' ')[1]
-        decoded_payload = decode_jwt(token)
-
-        if 'error' in decoded_payload:
-            raise AuthenticationFailed(decoded_payload['error'])
-
-        # Attach user info to the request
-        request.user_payload = decoded_payload
-        return view_func(request, *args, **kwargs)
-
-    return wrapper
-
-#end of jwt utils
-
-
-
-
-
+from rest_framework.permissions import IsAuthenticated
 class SampleAPI(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         data = {'message': 'Hello from Django backend'}
         return Response(data, status=status.HTTP_200_OK)
@@ -98,9 +46,20 @@ class Signup(APIView):
         return Response({'message': 'This is the signup page'}, status=status.HTTP_200_OK)
 
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import authenticate
+from django.conf import settings
+import jwt
+import datetime
+
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+import time
 class Login(APIView):
+    permission_classes = [AllowAny]
+    time.sleep(5)
     def post(self, request):
-        # Get the username and password from the request body
         username = request.data.get('username')
         password = request.data.get('password')
 
@@ -108,55 +67,38 @@ class Login(APIView):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-             # Generate JWT token
+            # Generate token payload
             payload = {
-                'user_id': user.id,
                 'username': user.username,
-                'email': user.email,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+                'iat': datetime.datetime.utcnow(),
             }
-            token = generate_jwt(payload)
-            # User is authenticated, respond with success
-            return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
-        else:
-            # Authentication failed, respond with an error
-            return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+            # Encode the JWT token
+            token = jwt.encode(
+                payload, 
+                'django-insecure-1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3', 
+                algorithm='HS256'
+            )
+
+            # Respond with the token and other data
+            return Response({
+                'jwt': token,
+                'message': 'Login successful',
+                'redirect_url': 'http://localhost:8080/index'  # Replace with your actual URL
+            }, status=status.HTTP_200_OK)
+
+        # If authentication fails
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+
+            
 from django.conf import settings
 from django.http import JsonResponse
 from rest_framework.views import APIView
 import uuid
 from django.http import HttpResponseRedirect
 
-
-# from django.shortcuts import redirect
-# from django.contrib.auth import login
-# from django.http import JsonResponse
-# from social_django.models import UserSocialAuth
-# from social_django.utils import psa
-# from django.contrib.auth.models import User
-
-# from django.shortcuts import redirect
-# from django.contrib.auth import login
-# from django.http import JsonResponse
-# from social_django.utils import psa
-# from rest_framework.views import APIView
-
-# This view will handle the Intra42 OAuth2 callback after successful sign up/sign in
-# @psa('social:complete')
-# class Intra42Login(APIView):
-#     def post(self, request, backend):
-#         # Get the user info from the social authentication backend (Intra42 in this case)
-#         user = request.user
-
-#         # Check if the user is authenticated
-#         if user.is_authenticated:
-#             login(request, user)  # Log the user in
-#             return redirect('/')  # Redirect to the homepage or dashboard after successful login
-#         else:
-#             return JsonResponse({'error': 'Authentication failed'}, status=400)
-
-
-
 class loginwith42(APIView):
+    permission_classes = [AllowAny]
     """
     Generates the Intra42 OAuth URL and sends it to the frontend.
     """
@@ -180,9 +122,10 @@ class loginwith42(APIView):
             f"&scope=public"
             f"&state={state}"
         )
-
+        print("Debug: Callback handler reached.\n")
         # Step 5: Return the URL as a JSON response
         return JsonResponse({"url": auth_url})
+    
 import requests
 from django.http import JsonResponse, HttpResponseRedirect
 from django.conf import settings
@@ -202,7 +145,6 @@ def fetch_intra42_user_info(access_token):
         print(f"Error: {response.status_code}, {response.text}")
         return None
 
-
 import requests
 from django.conf import settings
 from django.http import JsonResponse
@@ -212,9 +154,11 @@ from django.shortcuts import render
 
 
 class Intra42Callback(APIView):
+    permission_classes = [AllowAny] 
     def get(self, request):
+        print("Debug: Callback handler reached.")
         code = request.GET.get('code')
-
+        #print("code = |", code, "|")
         try:
             # Exchange the code for tokens
             token_url = "https://api.intra.42.fr/oauth/token"
@@ -247,32 +191,102 @@ class Intra42Callback(APIView):
                     "email": user_data['email'],
                     "first_name": user_data['first_name'],
                     "last_name": user_data['last_name'],
-                    
                     # #"first_name": user_data.get('first_name', ''),
                     # "last_name": user_data.get('last_name', ''),
                     "image":  user_data['image'],
                     #"kind": user_data['kind'],
-                    
                     #"access_token": access_token,
                     #"refresh_token": tokens.get('refresh_token', ''),
-                    
                 },
             )
-            if created:
-                #user.set_unusable_password()  # User signed up via OAuth, so no password
-                user.save()
-
-            # Generate JWT token
-            payload = {
-                'user_id': user.intra_id,
-                'username': user.login,
-                'email': user.email,
-            }
-            token = generate_jwt(payload)
-            # Debug: Print success
             print("User saved:", user)
 
-            return HttpResponseRedirect ("http://localhost:80")
+            return HttpResponseRedirect ("http://localhost:8080/index")
 
         except requests.RequestException as err:
             return JsonResponse({"error": str(err)}, status=500)
+
+
+
+class data_user(APIView):
+    #permission_classes = [IsAuthenticated] 
+    permission_classes = [AllowAny]
+    def get(self, request):
+        # Fetch all users from the database
+        users = Intra42User.objects.all()
+        
+        # Serialize the data
+        user_data = [
+            {
+                #"intra_id": user.intra_id,
+                "login": user.login,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "image": user.image,
+            }
+            for user in users
+        ]
+        
+        # Return the serialized data
+        return Response(user_data)
+
+# class Intra42Callback(APIView):
+#     permission_classes = [AllowAny] 
+    
+#     def get(self, request):
+#         print("Debug: Callback handler reached.")
+#         code = request.GET.get('code')
+
+#         try:
+#             # Exchange the code for tokens
+#             token_url = "https://api.intra.42.fr/oauth/token"
+#             token_data = {
+#                 "grant_type": "authorization_code",
+#                 "client_id": settings.OAUTH_42_CLIENT_ID,
+#                 "client_secret": settings.OAUTH_42_CLIENT_SECRET,
+#                 "code": code,
+#                 "redirect_uri": settings.OAUTH_42_REDIRECT_URI,
+#             }
+#             token_response = requests.post(token_url, data=token_data)
+#             token_response.raise_for_status()
+#             tokens = token_response.json()
+
+#             # Fetch user info using access token
+#             access_token = tokens['access_token']
+#             user_info_url = "https://api.intra.42.fr/v2/me"
+#             user_info_headers = {
+#                 "Authorization": f"Bearer {access_token}",
+#             }
+#             user_info_response = requests.get(user_info_url, headers=user_info_headers)
+#             user_info_response.raise_for_status()
+#             user_data = user_info_response.json()
+
+#             # Save or update user data in the database
+#             user, created = Intra42User.objects.update_or_create(
+#                 intra_id=user_data['id'],  # Unique Intra42 ID
+#                 defaults={
+#                     "login": user_data['login'],
+#                     "email": user_data['email'],
+#                     "first_name": user_data['first_name'],
+#                     "last_name": user_data['last_name'],
+#                     "image": user_data['image']['link'],  # Adjusted to match the expected key
+#                 },
+#             )
+#             print("User saved:", user)
+
+#             # Respond with user data
+#             response_data = {
+#                 "id": user.intra_id,
+#                 "login": user.login,
+#                 "email": user.email,
+#                 "first_name": user.first_name,
+#                 "last_name": user.last_name,
+#                 "image": user.image,  # Assuming this field is a URL
+#             }
+#             return Response(response_data, status=status.HTTP_200_OK)
+
+#         except requests.RequestException as err:
+#             return Response({"error": str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+

@@ -39,7 +39,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "80:80"  # Maps port 80 on the host to the frontend service (nginx)
+      - "8080:80"  # Maps port 80 on the host to the frontend service (nginx)
     networks:
       - app-network
 

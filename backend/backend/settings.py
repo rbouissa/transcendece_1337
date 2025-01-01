@@ -40,9 +40,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'api',
-    # 'django.contrib.sites',
-    # 'social_django',
-    # 'rest_framework_simplejwt',
+    'rest_framework_simplejwt',
+   
 ]
 
 MIDDLEWARE = [
@@ -139,38 +138,29 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-OAUTH_42_CLIENT_ID = 'u-s4t2ud-4db1d593edef49931bdbd761f4ab2d0e92015d139e159f226527e55da2e3e291'
-OAUTH_42_CLIENT_SECRET = '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'
+OAUTH_42_CLIENT_ID = 'u-s4t2ud-5512916ab7976877d4bb74d5b391a98cb56a9b9f1ff0fb3fdf005ad2d6a1a81a'
+OAUTH_42_CLIENT_SECRET = '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'
 OAUTH_42_REDIRECT_URI = 'http://localhost:8000/api/intra42callback/'
 OAUTH_42_AUTHORIZATION_URL = 'https://api.intra.42.fr/oauth/authorize'
 OAUTH_42_TOKEN_URL = 'https://api.intra.42.fr/oauth/token'
 OAUTH_42_API_BASE_URL = 'https://api.intra.42.fr/v2'
 
 
-# settings.py
-# from datetime import timedelta # import this library top of the settings.py file
-
-# put on your settings.py file below INSTALLED_APPS
-# REST_FRAMEWORK = {
-#     'DEFAULT_PERMISSION_CLASSES': (
-#         'rest_framework.permissions.IsAuthenticated',
-#     ),
-#     'DEFAULT_AUTHENTICATION_CLASSES': (
-#         'rest_framework_simplejwt.authentication.JWTAuthentication',
-#     ),
-# }
+#all the views api i have will use jwt by default
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+     'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
 }
 
-# AUTHENTICATION_BACKENDS = (
-#     'social_core.backends.github.GithubOAuth2',  # Intra42 uses the GitHub OAuth2 backend
-#     'django.contrib.auth.backends.ModelBackend',  # Default backend for handling standard Django login
-# )
+# from datetime import timedelta
 
-
-JWT_SECRET_KEY = 'api'  # A unique and secure key for signing tokens
-JWT_ALGORITHM = 'HS256'  # Algorithm used for signing (HS256 is widely used)
-JWT_EXPIRATION_SECONDS = 3600  # Token validity in seconds (1 hour here)
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+#     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+#     'ALGORITHM': 'HS256',
+#     'JWT_SECRET_KEY': 'django-insecure-1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3',
+# }
