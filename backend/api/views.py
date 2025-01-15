@@ -11,6 +11,7 @@ from rest_framework.exceptions import AuthenticationFailed
 import jwt
 import datetime
 from django.conf import settings
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 from rest_framework.permissions import IsAuthenticated
@@ -199,35 +200,67 @@ class Intra42Callback(APIView):
                     #"refresh_token": tokens.get('refresh_token', ''),
                 },
             )
-            print("User saved:", user)
+            refresh = RefreshToken.for_user(user)
+
+            print("User saved:", refresh.access_token)
+            print("User saved:", str(refresh))
+            responsee = JsonResponse({
+            'message': 'Data received successfully',
+            'access_token': str(refresh.access_token),
+            'refresh_token': str(refresh),
+            'redirect' : "http://localhost:8080/index"
+            })
+
+            set_secure_cookie(responsee, {'access': str(refresh.access_token), 'refresh': refresh})
 
             return HttpResponseRedirect ("http://localhost:8080/index")
 
         except requests.RequestException as err:
             return JsonResponse({"error": str(err)}, status=500)
 
+def set_secure_cookie(response, param):
+    response.set_cookie(
+        'access_token',
+        str(param['access']),
+        secure=True,
+        samesite='None'
+    )
+    response.set_cookie(
+        'refresh_token',
+        str(param['refresh']),
+        httponly=True,
+        secure=True,
+        samesite='None'
+    )
+    return response
 
+
+from rest_framework.exceptions import NotFound
 
 class data_user(APIView):
     #permission_classes = [IsAuthenticated] 
-    permission_classes = [AllowAny]
-    def get(self, request):
-        # Fetch all users from the database
-        users = Intra42User.objects.all()
-        
-        # Serialize the data
-        user_data = [
-            {
-                #"intra_id": user.intra_id,
-                "login": user.login,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "image": user.image,
-            }
-            for user in users
-        ]
-        
+   permission_classes = [IsAuthenticated]
+#    permission_classes = [AllowAny]
+   def get(self, request):
+        # Debugging output
+        print("Debug: Request user:")
+        print("Debug: Request user:", request.user)
+        print("Debug: Authorization header:", request.META.get('HTTP_AUTHORIZATION'))
+        # Get the authenticated user's data from the database
+        try:
+            user = Intra42User.objects.get(email=request.user)
+        except Intra42User.DoesNotExist:
+            raise NotFound("User data not found.")
+
+        # Serialize the data for the authenticated user
+        user_data = {
+            "login": user.login,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "image": user.image,
+        }
+
         # Return the serialized data
         return Response(user_data)
 

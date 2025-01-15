@@ -9,7 +9,7 @@ COPY . /app/
 RUN pip install --upgrade pip
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-
+ENV PYTHONUNBUFFERED=1
 # Copy the shell script to /bin and make it executable
 COPY script.sh /bin/script.sh
 RUN chmod +x /bin/script.sh

@@ -25,6 +25,8 @@ services:
       POSTGRES_DB: "tr_db"
       POSTGRES_USER: "reda_user"
       POSTGRES_PASSWORD: "123"
+    # volumes:
+    #   - ./backend:/backendd
     depends_on:
       db:
         condition: service_healthy       

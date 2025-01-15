@@ -2,7 +2,7 @@
 
 # sleep 5
 
-#cd backend
+# cd backend
 # echo "herrrrrrrrrrrrrrr\n"
 
 python3.10 manage.py createsuperuser --username=reda --password=123
