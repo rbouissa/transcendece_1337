@@ -1,19 +1,32 @@
-#leaderspage {
+:root{
+    --background-color: #1D1F2E;
+    --background-color2: #141622;
+    --text-color:#ffffff;
+    --image: url('/images/darkmode.png');
+}
+[data-theme="light"]{
+    --background-color: #f5e0fff1;
+    --background-color2: #E3E3FD;
+    --text-color:#000000;
+    --image: url('/images/lightmode.png');
+}
+
+body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     width: auto;
     height: auto; 
     display: flex;
-    background-color: #1D1F2E;
+    background-color: var(--background-color);
 }
-/* Sidebar and nav bar css */
+
 #body-st {
-    background-color: #1D1F2E;
+    background-color: var(--background-color);
 }
 
 #sidebarMenu {
-    background-color: #141622;
+    background-color: var(--background-color2);
     height: 100%;
     overflow-y: auto;
     overflow-x: auto;
@@ -106,7 +119,7 @@ li {
 }
 
 #navbar-2 {
-    background-color: #1D1F2E;
+    background-color: var(--background-color);
 }
 
 .search-place {
@@ -116,12 +129,12 @@ li {
 
 #search-input {
     padding-left: 30px; /* Add padding to make space for the icon */
-    background-color: #1D1F2E;
+    background-color: var(--background-color1);
     border-radius: 50px;
     border-color: #F338F7;
     height: 60px;
     width: 30vw;
-    color: #ffffff;
+    color: var(--text-color);
 }
 
 .search-place input::placeholder {
@@ -169,8 +182,11 @@ li {
     height: 24px;
     left: 20px;
     top: 38%;
+    /* background-color: #141622;
+    background-image: url(../images/lightmode.png); */
+    
     transform: translateY(-50%);
-    pointer-events: none; /* Prevent the icon from blocking input */
+    pointer-events: none;
 }
 
 .notification-btn {
@@ -185,6 +201,10 @@ li {
     margin-top: -8px;
     margin-right: 20px;
 }
+main{
+    background-color: #ffffff;
+}
+
 .title-container{
     margin-top: 20px;
     width: fit-content;
@@ -254,8 +274,22 @@ li {
 .icoon{
     color: #FFFFFF;
 }
-
-
+#username{
+    padding-left: 30px; /* Add padding to make space for the icon */
+    background-color: #1D1F2E;
+    border-radius: 50px;
+    border-color: #F338F7;
+    height: 60px;
+    width: 30vw;
+    color: #ffffff;
+}
+#friends-req{
+    /* margin-top: 20px; */
+    /* display: flex; */
+    margin-left: 5vw;
+    background-color: #615FED;
+   
+}
 
 
 

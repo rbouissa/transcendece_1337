@@ -108,7 +108,7 @@ class loginwith42(APIView):
         client_id = settings.OAUTH_42_CLIENT_ID
 
         # Step 2: Define the Redirect URI
-        redirect_uri = settings.OAUTH_42_REDIRECT_URI
+        redirect_uri = "http://localhost:8000/api/intra42callback/"
 
         # Step 3: Generate a random state string
         state = str(uuid.uuid4())  # Unique identifier for CSRF protection
@@ -156,6 +156,7 @@ from django.shortcuts import render
 
 class Intra42Callback(APIView):
     permission_classes = [AllowAny] 
+    print('vvvvvvvvvvvvvvvvvvvvvv\n\n\n\n\n')
     def get(self, request):
         print("Debug: Callback handler reached.")
         code = request.GET.get('code')
@@ -179,27 +180,29 @@ class Intra42Callback(APIView):
             user_info_url = "https://api.intra.42.fr/v2/me"
             user_info_headers = {
                 "Authorization": f"Bearer {access_token}",
-            }
+            } 
             user_info_response = requests.get(user_info_url, headers=user_info_headers)
             user_info_response.raise_for_status()
             user_data = user_info_response.json()
 
             # Save or update user data in the database
-            user, created = Intra42User.objects.update_or_create(
-                intra_id=user_data['id'],  # Unique Intra42 ID
-                defaults={
-                    "login": user_data['login'],
-                    "email": user_data['email'],
-                    "first_name": user_data['first_name'],
-                    "last_name": user_data['last_name'],
-                    # #"first_name": user_data.get('first_name', ''),
-                    # "last_name": user_data.get('last_name', ''),
-                    "image":  user_data['image'],
-                    #"kind": user_data['kind'],
-                    #"access_token": access_token,
-                    #"refresh_token": tokens.get('refresh_token', ''),
-                },
-            )
+            # user, created = Intra42User.objects.update_or_create(
+            #     intra_id=user_data['id'],  # Unique Intra42 ID
+            #     defaults={
+            #         "login": user_data['login'],
+            #         "email": user_data['email'],
+            #         "first_name": user_data['first_name'],
+            #         "last_name": user_data['last_name'],
+            #         # #"first_name": user_data.get('first_name', ''),
+            #         # "last_name": user_data.get('last_name', ''),
+            #         "image":  user_data['image'],
+            #         #"kind": user_data['kind'],
+            #         #"access_token": access_token,
+            #         #"refresh_token": tokens.get('refresh_token', ''),
+            #     },
+            # )
+            user = Intra42User(intra_id=user_data['id'], login=user_data['login'],first_name=user_data['first_name'],last_name=user_data['last_name'],email=user_data['email'],image=user_data['image'])#picture=picture
+            user.save()
             refresh = RefreshToken.for_user(user)
 
             print("User saved:", refresh.access_token)
@@ -208,12 +211,12 @@ class Intra42Callback(APIView):
             'message': 'Data received successfully',
             'access_token': str(refresh.access_token),
             'refresh_token': str(refresh),
-            'redirect' : "http://localhost:8080/index"
+            'url' : "http://localhost:8080/dashboard"
             })
 
             set_secure_cookie(responsee, {'access': str(refresh.access_token), 'refresh': refresh})
-
-            return HttpResponseRedirect ("http://localhost:8080/index")
+            print('\n\n\n', responsee, '\n\n\n')
+            return responsee
 
         except requests.RequestException as err:
             return JsonResponse({"error": str(err)}, status=500)
@@ -237,22 +240,15 @@ def set_secure_cookie(response, param):
 
 from rest_framework.exceptions import NotFound
 
-class data_user(APIView):
-    #permission_classes = [IsAuthenticated] 
-   permission_classes = [IsAuthenticated]
-#    permission_classes = [AllowAny]
-   def get(self, request):
-        # Debugging output
-        print("Debug: Request user:")
-        print("Debug: Request user:", request.user)
-        print("Debug: Authorization header:", request.META.get('HTTP_AUTHORIZATION'))
-        # Get the authenticated user's data from the database
-        try:
-            user = Intra42User.objects.get(email=request.user)
-        except Intra42User.DoesNotExist:
-            raise NotFound("User data not found.")
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-        # Serialize the data for the authenticated user
+class data_user(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user  # This will be the authenticated Intra42User
         user_data = {
             "login": user.login,
             "email": user.email,
@@ -260,8 +256,6 @@ class data_user(APIView):
             "last_name": user.last_name,
             "image": user.image,
         }
-
-        # Return the serialized data
         return Response(user_data)
 
 # class Intra42Callback(APIView):

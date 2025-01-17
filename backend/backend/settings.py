@@ -138,12 +138,16 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-OAUTH_42_CLIENT_ID = 'u-s4t2ud-6806dddf3efaba264ea3d097b8389fc849797a74c2374fcbe7a30d499de07d07'
-OAUTH_42_CLIENT_SECRET = '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'
+OAUTH_42_CLIENT_ID = 'u-s4t2ud-0ac40e64887c605f3671ea4a71afb97e41aca6cc87fb58aae9ae0b0acb30b59a'
+OAUTH_42_CLIENT_SECRET = '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'
 OAUTH_42_REDIRECT_URI = 'http://localhost:8000/api/intra42callback/'
 OAUTH_42_AUTHORIZATION_URL = 'https://api.intra.42.fr/oauth/authorize'
 OAUTH_42_TOKEN_URL = 'https://api.intra.42.fr/oauth/token'
 OAUTH_42_API_BASE_URL = 'https://api.intra.42.fr/v2'
+
+
+AUTH_USER_MODEL = 'api.Intra42User'
+
 
 
 #all the views api i have will use jwt by default
@@ -155,6 +159,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
 }
+AUTH_USER_MODEL = 'api.Intra42User'
 
 from datetime import timedelta
 
@@ -176,8 +181,9 @@ SIMPLE_JWT = {
 
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
-    "USER_ID_FIELD": "email",
-    "USER_ID_CLAIM": "intra_id",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "id",
+    
     "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
 
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),

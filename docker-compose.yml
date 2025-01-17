@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   db:
@@ -25,8 +24,6 @@ services:
       POSTGRES_DB: "tr_db"
       POSTGRES_USER: "reda_user"
       POSTGRES_PASSWORD: "123"
-    # volumes:
-    #   - ./backend:/backendd
     depends_on:
       db:
         condition: service_healthy       
@@ -34,6 +31,8 @@ services:
       - "8000:8000"  # Maps port 8000 on the host to the backend
     networks:
       - app-network
+    volumes:
+      - ./backend:/app/  # Mounts the backend directory to the Django container
 
   frontend:
     build: ./frontend  # Path to your frontend Dockerfile, which should copy static files to nginx
@@ -41,10 +40,11 @@ services:
     depends_on:
       - backend
     ports:
-      - "8080:80"  # Maps port 80 on the host to the frontend service (nginx)
+      - "8080:8080"  # Maps port 80 on the host to the frontend service (nginx)
     networks:
       - app-network
-
+    volumes:
+      - ./frontend:/var/www/html  # Mounts the frontend directory to the nginx container
 networks:
   app-network:
     driver: bridge

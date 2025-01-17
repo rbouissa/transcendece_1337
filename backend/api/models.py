@@ -1,22 +1,20 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.auth.models import User
 
-
-class Intra42User(models.Model):
-    #user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="intra42_profile")
+class Intra42User(AbstractUser):
     intra_id = models.IntegerField(unique=True)  # Unique ID from Intra42
-    login = models.CharField(max_length=1000, unique=True)  # User's login name
+    login = models.CharField(max_length=100, unique=True)  # User's login name
     email = models.EmailField(unique=True)  # User's email
-    first_name = models.CharField(max_length=1000, blank=True, null=True)  # First name
-    last_name = models.CharField(max_length=1000, blank=True, null=True)  # Last name
-    image = models.URLField(max_length=10000,blank=True, null=True)  # URL to profile picture
-    # access_token = models.TextField(blank=True, null=True)  # Store the access token for API calls
-    # refresh_token = models.TextField(null=True, blank=True)  # Optional: Refresh token
-    #kind = models.CharField(max_length=1000)  # User kind or role
+    first_name = models.CharField(max_length=100, blank=True, null=True)  # First name
+    last_name = models.CharField(max_length=100, blank=True, null=True)  # Last name
+    image = models.URLField(max_length=10000, blank=True, null=True)  # Profile picture URL
+    username=None
+    password = models.CharField(max_length=128, blank=True, null=True)  # Optional password field
+    USERNAME_FIELD = 'login'  # Use `login` for authentication
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']  # Fields required on user creation
 
-    def __str__(self):
-        return self.login
-
+    # def __str__(self):
+    #     return self.login
 
 
 #id,email,login,last_name,usual_full_name,url,phone,displayname:reda bouissali
