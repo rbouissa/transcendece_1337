@@ -2,17 +2,16 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class Intra42User(AbstractUser):
-    intra_id = models.IntegerField(unique=True)  # Unique ID from Intra42
+    intra_id = models.CharField(null=True ,max_length=101)
     login = models.CharField(max_length=100, unique=True)  # User's login name
     email = models.EmailField(unique=True)  # User's email
-    first_name = models.CharField(max_length=100, blank=True, null=True)  # First name
-    last_name = models.CharField(max_length=100, blank=True, null=True)  # Last name
     image = models.URLField(max_length=10000, blank=True, null=True)  # Profile picture URL
-    username=None
+    username = None
     password = models.CharField(max_length=128, blank=True, null=True)  # Optional password field
-    USERNAME_FIELD = 'login'  # Use `login` for authentication
-    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']  # Fields required on user creation
-
+    first_name = models.CharField(max_length=100, blank=True, null=True, default='')  # Set a default value
+    last_name = models.CharField(max_length=100, blank=True, null=True, default='')  # Set a default value
+    USERNAME_FIELD = 'login'
+    REQUIRED_FIELDS = ['email']
     # def __str__(self):
     #     return self.login
 

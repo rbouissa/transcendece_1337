@@ -1,4 +1,8 @@
 //all the routes are defined here
+function sleep(milliseconds) {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
 const routes = [
     {link:'/',template:'landing.html'},
     {link:'/landing',template:'landing.html'},
@@ -8,18 +12,26 @@ const routes = [
     {link:'/friends',template:'friends.html'},
     {link:'/leaderboard',template:'leaderboard.html'},
     {link:'/test' ,template:'test.html'},
-];
+];// Utility to get a cookie value
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(";").shift();
     return null;
-  }
-async function fetchUserData(accessToken) {
-    accessToken = getCookie('access_token');
+}
+
+// Function to fetch user data
+async function fetchUserData() {
+    const accessToken = getCookie('access_token');
+
+    if (!accessToken) {
+        console.error("Access token not found");
+        document.getElementById('userData').textContent = 'Access token not found';
+        return;
+    }
 
     try {
-        console.log(accessToken);
+        console.log("Access token:", accessToken);
 
         const response = await fetch('http://localhost:8000/api/user_data/', {
             method: 'GET',
@@ -32,13 +44,39 @@ async function fetchUserData(accessToken) {
         if (response.ok) {
             const userData = await response.json();
             console.log('User data:', userData);
-            // You can update the UI here with user data
             document.getElementById('userData').textContent = JSON.stringify(userData, null, 2);
         } else if (response.status === 401) {
-            console.error('Unauthorized: Invalid or expired token');
-            document.getElementById('userData').textContent = 'Unauthorized: Invalid or expired token';
+            
+            console.warn('Access token expired. Attempting to refresh...');
+            sleep(10000)
+            const refreshToken = getCookie("refresh_token");
+
+            if (refreshToken) {
+                const refreshResponse = await fetch("http://localhost:8000/token_refresh/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ refresh: refreshToken }),
+                });
+
+                if (refreshResponse.ok) {
+                    const data = await refreshResponse.json();
+                    document.cookie = `access_token=${data.access}; SameSite=None; Secure; Path=/`;
+
+                    console.log('Access token refreshed successfully');
+                    // Retry the original request
+                    return fetchUserData();
+                } else {
+                    console.error('Failed to refresh token');
+                    document.getElementById('userData').textContent = 'Failed to refresh token';
+                }
+            } else {
+                console.error('Refresh token not found. User needs to re-authenticate.');
+                document.getElementById('userData').textContent = 'Please log in again.';
+            }
         } else {
-            console.error('Failed to fetch user data');
+            console.error('Failed to fetch user data:', response.statusText);
             document.getElementById('userData').textContent = 'Failed to fetch user data';
         }
     } catch (error) {
@@ -200,3 +238,36 @@ document.addEventListener("DOMContentLoaded", () => {
     const initialRoute = window.location.pathname || "/landing";
     handling_navigation(initialRoute, false);
 });
+
+// async function refreshAccessToken(refreshToken) {
+//     try {
+//         const response = await fetch('http://localhost:8000/api/token_refresh/', {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ refresh: refreshToken }),
+//         });
+
+//         if (response.ok) {
+//             const data = await response.json();
+//             const newAccessToken = data.access;
+//             console.log('New access token:', newAccessToken);
+//             return newAccessToken;
+//         } else {
+//             console.error('Failed to refresh access token');
+//         }
+//     } catch (error) {
+//         console.error('Error refreshing access token:', error);
+//     }
+// }
+
+
+
+
+// Utility to fetch tokens from cookies
+// function getCookie(name) {
+//     const value = `; ${document.cookie}`;
+//     const parts = value.split(`; ${name}=`);
+//     if (parts.length === 2) return parts.pop().split(';').shift();
+//     return null;
+//   }
+  
