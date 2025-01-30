@@ -5,4 +5,12 @@ export function toggleTheme() {
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
 }
-window.toggleTheme = toggleTheme;
+// window.toggleTheme = toggleTheme;
+
+// export function applySavedTheme() {
+//     const savedTheme = localStorage.getItem('theme') || 'light'; // Default to light theme
+//     document.documentElement.setAttribute('data-theme', savedTheme);
+// }
+
+// // Ensure the theme is applied on page load
+// applySavedTheme();

@@ -10,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U reda_user -d tr_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,7 +26,7 @@ services:
       POSTGRES_PASSWORD: "123"
     depends_on:
       db:
-        condition: service_healthy       
+        condition: service_healthy
     ports:
       - "8000:8000"  # Maps port 8000 on the host to the backend
     networks:

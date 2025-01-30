@@ -11,12 +11,14 @@ html {
     --background-color: #110133ea;
     --background-color2: #11131F;
     --text-color:#ffffff;
+    --text-color2:#ffffff;
     --image: url('/images/darkmode.png');
 }
 [data-theme="light"]{
-    --background-color: #f5e0fff1;
+    --background-color: #CCC2DC;
     --background-color2: #ffffff;
     --text-color:#000000;
+    --text-color2:#374557;
     --image: url('/images/lightmode.png');
 }
 
@@ -35,7 +37,8 @@ body{
 .column {
     /* padding: 20px; */
     background-color: #2d78c3;
-    border: 1px solid #dee2e6;
+    border: 1px solid transparent;
+    border-radius: 10px;
     height: 100vh;
     position: relative;
     overflow-y: auto;
@@ -86,20 +89,25 @@ body{
 }
 
 #main-div{
-    width: 92%;
+    width: 90%;
     height: 90vh;
     background: var(--background-color2);
     position: relative;
-    top: 4.5%;
-    left: 4.5%;
+    top: 5%;
+    left:5%;
     overflow-y: auto;
+    border-radius: 2%;
 }
 #subject{
     font-size: 45px;
+    font-weight: bolder;
     font-family: 'Inter', sans-serif;
-    color: var(--text-color) ;
+    color: var(--text-color2) ;
     padding-top: 15vh;
-    padding-left: 20vw;
+    padding-left: 40%;
+    justify-content: center;
+    align-items: center;
+
 }
 #subject::after{
     content: '';
@@ -111,7 +119,7 @@ body{
 
 }
 .login-input{
-    padding-left: 25%;
+    padding-left: 22%;
     padding-top: 2%;
     color: var(--text-color);
     font-family: 'Istok Web', sans-serif;
@@ -123,7 +131,7 @@ body{
     width:25vw;
     background-color: transparent;
     border-radius: 28px;
-    height: 50px;
+    height: 55px;;
 }
 .form-control::placeholder{
     color: #938F99;
@@ -136,7 +144,7 @@ body{
 
 .icon {
     position: absolute;
-    right: 10px;
+    right: 20px;
     top: 50%;
     transform: translateY(-50%);
     font-size: 24px;
@@ -152,23 +160,28 @@ body{
 }
 
 .log-button{
-    margin-left: 25%;
+    margin-left:22%;
     width: 25vw;
-    height: 50px;
+    height: 55px;
     border-radius: 28px;
+    border-color: transparent;
+    border-width: 1px;
     color: #ffffff;
-    font-size: 18px;
+    background-color: #5356FB;
+    font-size: 21px;
     font-family: 'Inter', sans-serif;
     font-weight: bold;
 }
-
+.form-check-label{
+    color: var(--text-color2);
+}
 #or-line{
-    padding-top: 2vh;
+    padding-top: 1vh;
     font-size: 18px;
-    color: #ffffff;
+    font-weight: bolder;
+    color: #727272;
     position: relative;
-    text-align: center;
-    
+    text-align: center;    
 }
 
 #log-42{
@@ -191,6 +204,7 @@ p{
     text-align: center;
 }
 #signup-link{
+    padding-left: 8px;
     color:var(--text-color);
     cursor: pointer;
 }
@@ -198,13 +212,16 @@ p{
     color:#F338F7;
 }
 #mode-btn{
-    width: 2.7%;
+    width: 30px;
     height: 30px;
     cursor: pointer;
     margin-top: 6%;
     margin-left: 96%;
+    border: 0.1px  #857b7b;
+    border-style:groove;
+    border-radius: 3px;
     background-color: transparent;
-    background-image: url('../images/darkmode.png');
+    background-image: var(--image);
     background-size: cover;
 }
 
@@ -212,6 +229,9 @@ p{
 /*--------------------------small to medium screen css*-----------------*/
 
 @media (max-width: 1400px) {
+    .left-side{
+        display: none;
+    }
     #login-title {
         font-size: 80px;
     }
@@ -219,11 +239,19 @@ p{
         padding-left: 20%;
         font-size: 15px;
     }
+    .form-control{
+        width: 250px;
+    }
+    label{
+        padding-top: 10px;
+    }
     .form-check{
+        margin-left: 50px;
         font-size: 12px;
     }
     .log-button{
         font-size: 14px;
+        width: 250px;
     }
     #or-line{
         padding-top: 1vh;

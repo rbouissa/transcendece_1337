@@ -41,10 +41,14 @@ INSTALLED_APPS = [
     'corsheaders',
     'api',
     'rest_framework_simplejwt',
+    'channels',
+    'Ping',
+    "rest_framework_simplejwt.token_blacklist"
    
 ]
 
 MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -134,13 +138,19 @@ SITE_ID = 1
 
 STATIC_URL = 'static/'
 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-OAUTH_42_CLIENT_ID = 'u-s4t2ud-0ac40e64887c605f3671ea4a71afb97e41aca6cc87fb58aae9ae0b0acb30b59a'
-OAUTH_42_CLIENT_SECRET = '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'
-OAUTH_42_REDIRECT_URI = 'http://localhost:8000/api/intra42callback/'
+OAUTH_42_CLIENT_ID = 'u-s4t2ud-66e7507845a8f855368de1c99a9c0d7ba0cd1ef350f00ba07403f12b18d290ac'
+OAUTH_42_CLIENT_SECRET = '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'
+OAUTH_42_REDIRECT_URI = 'http://localhost:8080/dashboard'
 OAUTH_42_AUTHORIZATION_URL = 'https://api.intra.42.fr/oauth/authorize'
 OAUTH_42_TOKEN_URL = 'https://api.intra.42.fr/oauth/token'
 OAUTH_42_API_BASE_URL = 'https://api.intra.42.fr/v2'
@@ -202,4 +212,16 @@ SIMPLE_JWT = {
     "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+}
+
+
+# add asgi settings
+ASGI_APPLICATION = 'backend.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
 }

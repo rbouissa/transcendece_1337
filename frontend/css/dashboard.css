@@ -1,18 +1,19 @@
 :root{
-    --background-color: #1D1F2E;
-    --background-color2: #141622;
+    --background-color3: #444040;
+    --background-color4: #141622;
     --text-color:#ffffff;
     --image: url('/images/darkmode.png');
 }
 [data-theme="light"]{
-    --background-color: #f5e0fff1;
-    --background-color2: #E3E3FD;
+    --background-color3: #9094ad;
+    --background-color4: #8D90A3;
     --text-color:#000000;
     --image: url('/images/lightmode.png');
 }
 
 #dash-title {
     font-size: 45px;
+    font-weight: bold;
     font-family: 'Baloo Da', sans-serif;
     color: var(--text-color);
     margin-top: 20px;
@@ -28,24 +29,25 @@
 .profile h2 {
     font-size: 45px;
     font-family: 'Baloo Da', sans-serif;
-    color: #FFFFFF;
+    color: var(--text-color);
     margin-top: 20px;
 }
 
 .profile {
     display: flex;
-    align-items: center;
+    /* align-items: center; */
 }
 
 .usr {
     display: flex;
     flex-direction: column;
+    margin-top: 25px;
 }
 
 .username {
-    font-size: 30px;
+    font-size: 32px;
     font-family: 'Inter', sans-serif;
-    color: #FFFFFF;
+    color: var(--text-color);;
     margin-left: 15px;
     font-weight: bolder;
 }
@@ -53,18 +55,19 @@
 .rank {
     font-size: 15px;
     font-family: 'Inter', sans-serif;
-    color: #FFFFFF;
+    color: var(--text-color);;
     padding-left: 20px;
 }
 
 .winning-rate {
-    border: 2px solid #FFFFFF;
+    border: none;
     width: max-content;
-    background-color: #171820;
+    /* background-color: #171820; */
 }
 
 .winning-rate h3 {
-    font-size: 20px;
+    font-size: 32px;
+    font-weight: bold;
     font-family: 'Inter', sans-serif;
     color: #FFFFFF;
     padding: 10px;
@@ -78,18 +81,20 @@
     flex: 1;
     margin-right: 50px;
     text-align: center;
-    border: 2px solid #FFFFFF;
-    border-radius: 10px;
+    border: none;
+    border-radius: 15px;
+    background-color: var(--background-color4);
 }
 
 .latest-match {
     /* border: 2px solid #FFFFFF; */
     width: max-content;
-    background-color: #171820;
+    /* background-color: #171820; */
 }
 
 .latest-match h3 {
-    font-size: 20px;
+    font-size: 32px;
+    font-weight: bold;
     font-family: 'Inter', sans-serif;
     color: #FFFFFF;
     padding: 10px;
@@ -98,11 +103,12 @@
 .ranking {
     /* border: 2px solid #FFFFFF; */
     width: max-content;
-    background-color: #171820;
+    /* background-color: #171820; */
 }
 
 .ranking h3 {
-    font-size: 20px;
+    font-size: 32px;
+    font-weight: bold;
     font-family: 'Inter', sans-serif;
     color: #FFFFFF;
     padding: 10px;
@@ -128,30 +134,42 @@
 .dashtable {
     margin-top: 50px;
     text-align: center;
+    
 }
 
 .custom-table th {
-    background-color: #141622;
+    background-color: var(--background-color4);
     color: #FFFFFF;
     font-family: 'Inter', sans-serif;
+    
 }
 
 .first-th th {
-    font-size: 26px;
+    font-size: 30px;
+    font-family: 'Inter', sans-serif;
 }
 
 .second-th th {
     font-size: 16px;
-    background-color: #444040;
+    background-color: var(--background-color3);
 }
 
 .body-td td {
     border: none;
 }
+#history-body td{
+    background-color: var(--background-color4);
+}
 
 .game-mode {
     position: relative;
     width: 200px;
+}
+
+.profile-img{
+    border-radius: 50px;
+    width: 10vw;
+    height: 10vw;
 }
 
 .game-mode .mode-icon {

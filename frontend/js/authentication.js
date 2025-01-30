@@ -1,40 +1,4 @@
-//42 authentication function for login
-
-// export function log42(){
-//     document.getElementById('log-42').addEventListener('click', async () => {
-//         console.log('Login with 42 button clicked');
-//         const urlParams = new URLSearchParams(window.location.search);
-//         const login = urlParams.get('login');
-//         const email = urlParams.get('email');
-//         console.log(`Logged in user: ${login}, Email: ${email}`);
-
-//         try {
-//             // Fetch the Intra42 authentication URL from the backend
-//             const response = await fetch('http://localhost:8000/api/login_with_42/', {
-//                 method: 'GET',
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                 },
-//             });
-    
-//             if (response.ok) {
-//                 // Extract the URL and redirect the user
-//                 const data = await response.json();
-//                 if (data.url) {
-//                     window.location.href = data.url; // Redirect to Intra42 authentication page
-//                 } else {
-//                     console.error('URL not found in response');
-//                 }
-//                 return('ok');
-//             } else {
-//                 console.error('Failed to fetch authentication URL');
-//             }
-//         } catch (error) {
-//             console.error('Error during login:', error);
-//             return('ko');
-//         }
-//     });
-// }
+let log42Complete = false;
 
 export function log42(){
     document.getElementById('log-42').addEventListener('click', async () => {
@@ -56,20 +20,36 @@ export function log42(){
             if (response.ok) {
                 // Extract the URL and redirect the user
                 const data = await response.json();
+                console.log(data)
                 console.log(data )
                 if (data.url) {
-                    
+                    log42Complete = true;
+                    console.log("1-r-------esponse = ", data)
+
                     window.location.href = data.url; // Redirect to Intra42 authentication page
+                    
+                    
                 } else {
+                    console.log("2-response = ", data)
+
                     console.error('URL not found in response');
+                    return(false);
                 }
+
+                document.cookie = `access_token=${data.access_token}; path=/; Secure`;
+                document.cookie = `refersh_token=${data.refresh_token}; path=/; Secure`;
             } else {
                 console.error('Failed to fetch authentication URL');
+                return(false);
             }
         } catch (error) {
             console.error('Error during login:', error);
+            return(false);
         }
     });
+}
+export function isLog42Complete() {
+    return log42Complete;
 }
 
 
@@ -81,50 +61,55 @@ export function handleCallbackResponse() {
 
     if (accessToken && refreshToken) {
         console.log('Tokens retrieved:', { accessToken, refreshToken });
-
+        
         // Use the tokens to fetch user data
         fetchUserData(accessToken);
+        console.log('good!!!');
+        log42Complete = true;
+        // login_success= true;
     } else {
         console.error('No tokens found');
+        // login_success = false;
     }
-    
 }
 
 // Helper function to get cookies
- function getCookie(name) {
+export function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
 
 
-// export async function fetchUserData(accessToken) {
-//     // const accessToken = getCookie('access_token');
+export async function fetchUserData(accessToken) {
+    try {
+        const response = await fetch('http://localhost:8000/api/user_data/', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+        });
 
-//     try {
-//         console.log(accessToken)
-//         const response = await fetch('http://localhost:8000/api/user_data/', {
-//             method: 'GET',
-//             headers: {
-//                 'Authorization': `Bearer ${accessToken}`,
-//                 'Content-Type': 'application/json',
-//             },
-//         });
-
-//         if (response.ok) {
-//             const userData = await response.json();
-//             console.log('User data:', userData);
-//          // Update the UI with user data
-//         } else if (response.status === 401) {
-//             console.error('Unauthorized: Invalid or expired token');
-//             // Display user data on the page (e.g., login, email, etc.)
-//         } else {
-//             console.error('Failed to fetch user data');
-//         }
-//     } catch (error) {
-//         console.error('Error fetching user data:', error);
-//     }
-// }
+        if (response.ok) {
+            const userData = await response.json();
+            console.log('User data:', userData);
+            // login_success= true;
+            return (true);
+         // Update the UI with user data
+        } else if (response.status === 401) {
+            console.error('Unauthorized: Invalid or expired token');
+            login_success= false;
+            // Display user data on the page (e.g., login, email, etc.)
+        } else {
+            console.error('Failed to fetch user data');
+            return (false);
+        }
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        return (false);
+    }
+}
 
 
 async function refreshAccessToken(refreshToken) {
@@ -191,9 +176,11 @@ export function simplelog() {
                 // window.location.href = login.html;
                 import(`./main.js`).then(module => {
                     module.handling_navigation('/login');
+                    return (true);
                 }
                 ).catch(error => {
                     console.error('Error in importing the module:', error);
+                    return (false);
                 });
                 // return ('ok');
                 // Redirect to the login page
@@ -204,10 +191,12 @@ export function simplelog() {
                 console.log('Signup failed:3', response.statusText);
                 alert("Signup failed: " + response.statusText);
                 return ('ko');
+                return(false);
                 // document.getElementById('responseMessage').textContent = "Signup failed: " + response.statusText;
             }
         } catch (error) {
             console.error('Error:4', error);
+            return(false);
             // document.getElementById('responseMessage').textContent = "Network error or server is down";
         }
     });
@@ -221,8 +210,10 @@ export function login() {
     
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
-    
+
+        
         const data = { username, password };
+        console.log ("login by :", data);
     
         try {
             // Send login data to the Django backend API endpoint
@@ -238,8 +229,13 @@ export function login() {
                 const responseData = await response.json();
                 
                 // Store the token in localStorage
-                localStorage.setItem('authToken', responseData.token);
-    
+                console.log('Token:', responseData.access_token);
+                // localStorage.setItem('authToken', responseData.access_token);
+                // khass dakshi i tsava f cookie mashi f local storage, rah kadoz l dashboard t9leb 3la access_token, so khassek tl9aha, wnta fash yalah katloga maatl9ahash
+                // btw, reda kaysseyfet l access_token f response_data as access_token, so khasssek t3ayet f response_data.access_token wnta kat9leb 3la response_data.token so ghatl9a teb ...
+                document.cookie = `access_token=${responseData.access_token}; path=/; Secure`;
+                document.cookie = `refersh_token=${responseData.refresh_token}; path=/; Secure`;
+                console.log('Login successful:', responseData);
                 // Redirect to the home page
                 import(`./main.js`).then(module => {
                     module.handling_navigation('/dashboard');
@@ -248,6 +244,7 @@ export function login() {
                 });
             } else {
                 const errorData = await response.json();
+                console.error('1-Error:', errorData.error);
                 // document.getElementById('errorMessage').textContent = errorData.error;
             }
         } catch (error) {
@@ -256,3 +253,37 @@ export function login() {
         }
     });
 }
+
+export async function logout() {
+    
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+        console.log("han hna--> ");
+        try{
+            const resp = await fetch('http://localhost:8000/api/logout/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            if(resp.ok)
+            {
+                console.log("logout good");
+                document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            }
+            else{
+                console.error('Failed to logout');
+            }
+        }
+        catch(error){
+            console.error('Error:', error);
+        }
+    });
+}
+
+
+
+
+
+
+
+export {log42Complete};

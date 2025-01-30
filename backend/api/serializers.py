@@ -41,5 +41,5 @@ class Intra42UserSerializer(serializers.ModelSerializer):
         return user
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=100)  # Username field
+    username = serializers.CharField(source='login')  # Username field
     password = serializers.CharField(write_only=True)  # Password field, write-only
