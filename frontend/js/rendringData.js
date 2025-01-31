@@ -76,9 +76,9 @@ export async function fetching_data(){
     // return data;
 }
 
-function friendsRequest() {
+export async function friendsRequest() {
+    
     document.getElementById('request-form').addEventListener('submit', async function (event) {
-        console.log('submit->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.');
         // sleep(7000);
         event.preventDefault();
     

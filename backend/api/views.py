@@ -45,8 +45,9 @@ from .serializers import LoginSerializer
 from django.contrib.auth.hashers import make_password  # For password hashing\
 from .models import Intra42User  # Import your custom user model
 from rest_framework.permissions import AllowAny
-from .serializers import Intra42UserSerializer  # Import the serializer
+from .serializers import *  # Import the serializer
 from rest_framework import status
+
 
 
 class SampleAPI(APIView):
@@ -248,28 +249,6 @@ def print_access_token_lifetime():
     else:
         print("Access Token Lifetime is not set.")
 
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.tokens import OutstandingToken, BlacklistedToken
-class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        try:
-            # Blacklist all tokens for the user
-            tokens = OutstandingToken.objects.filter(user=request.user)
-            for token in tokens:
-                BlacklistedToken.objects.get_or_create(token=token)
-            
-            # Clear cookies (if set by the server)
-            response = Response({"message": "Logged out successfully"})
-            response.delete_cookie('access_token')
-            response.delete_cookie('refresh_token')
-            return response
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
 
 class data_user(APIView):
     print ("data_user APIView reached")  # Debug
@@ -286,34 +265,23 @@ class data_user(APIView):
             "image": user.image,
         }
         return Response(user_data)
+    
+from rest_framework import permissions, generics, status
+from rest_framework.response import Response
+from .serializers import LogoutSerializer
 
+class LogoutView(generics.GenericAPIView):
+    """
+    A view to handle user logout with JWT.
+    """
+    serializer_class = LogoutSerializer
+    permission_classes = [IsAuthenticated]
 
-#this for logout views
-
-# class logoutV(CreateAPIView):
-#     serializer_class = logoutS
-
-#     def post(self, request):
-#         logout(request)
-#         response = JsonResponse({'message': 'User logged out successfully'}, status=status.HTTP_200_OK)
-#         response.delete_cookie('refresh_token', samesite='None')
-#         response.delete_cookie('access_token', samesite='None')
-#         return response
-
-# from rest_framework.generics import DestroyAPIView
-
-# class delete_cookies(DestroyAPIView):
-#     def destroy(self, request, *args, **kwargs):
-#         try:
-#             response = JsonResponse({'message': 'Cookies deleted successfully'}, status=200)
-#             response.delete_cookie('refresh_token', samesite='None')
-#             response.delete_cookie('access_token', samesite='None')
-#         except Exception as e:
-#             return Response({'error': str(e)}, status=400)
-#         return response
-# from django.contrib.auth import logout
-
-# class logoutS(serializers.ModelSerializer):
-#     class Meta:
-#         model = user_pro
-#         fields = []
+    def post(self, request, *args, **kwargs):
+        """
+        Handles POST requests to log out a user by blacklisting the refresh token.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)  # Validate the incoming data
+        serializer.save()  # Blacklist the refresh token
+        return Response({"message": "Successfully logged out"}, status=status.HTTP_204_NO_CONTENT)

@@ -43,3 +43,28 @@ class Intra42UserSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(source='login')  # Username field
     password = serializers.CharField(write_only=True)  # Password field, write-only
+
+from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()  # Field to receive the refresh token
+
+    def validate(self, attrs):
+        """
+        Validate the received refresh token and store it for later use.
+        """
+        self.token = attrs['refresh']
+        return attrs
+
+    def save(self, **kwargs):
+        """
+        Blacklist the refresh token to invalidate it.
+        """
+        try:
+            # Blacklist the provided refresh token
+            token = RefreshToken(self.token)
+            token.blacklist()
+        except TokenError:
+            # Handle the case of an invalid token
+            self.fail('bad_token')
